@@ -1,5 +1,6 @@
 import io.restassured.RestAssured;
 import io.restassured.module.jsv.JsonSchemaValidator;
+import io.restassured.response.Response;
 import org.testng.Assert;
 import org.testng.annotations.Test;
 
@@ -26,18 +27,33 @@ public class MainTest extends ConfigurationTest{
     @Test(dataProvider = "resourcesSchema")
     public void getValidationSchema(String resources, String schema){
         RestAssured.baseURI = "https://jsonplaceholder.typicode.com";
-        RestAssured.given().get(resources).then().assertThat().body(JsonSchemaValidator.matchesJsonSchemaInClasspath(schema));
+        Response response = RestAssured.given().get(resources);
+        Assert.assertTrue(JsonSchemaValidator.matchesJsonSchemaInClasspath(schema).matches(response.asString()));
     }
 
     @Test(dataProvider = "compareNodesByID")
     public void get_20_50_100(int mID, String resource, int mUserID, String mTitle, String mBody){
         RestAssured.baseURI = "https://jsonplaceholder.typicode.com";
-        RestAssured.given().pathParam("id", mID).expect().statusCode(200)
-                .body("userId", equalTo(mUserID))
-                .body("id", equalTo(mID))
-                .body("title", equalTo(mTitle))
-                .body("body", equalTo(mBody))
-                .when().get(resource);
+        Response response = RestAssured.given().pathParam("id", mID).expect().statusCode(200).when().get(resource);
+
+        Assert.assertEquals(response.path("userId"), mUserID);
+        Assert.assertEquals(response.path("id"), mID);
+        Assert.assertEquals(response.path("title"), mTitle);
+        Assert.assertEquals(response.path("body"), mBody);
+
+    }
+
+    @Test(dataProvider = "compareNodesByID")
+    public void get_20_50_100_Version2(int mID, String resource, int mUserID, String mTitle, String mBody){
+        RestAssured.baseURI = "https://jsonplaceholder.typicode.com";
+
+        Post postResponse = RestAssured.given().pathParam("id", mID).expect().statusCode(200).when().get(resource).as(Post.class);
+        Post postExpected = new Post(mUserID, mID, mTitle, mBody);
+
+        Assert.assertEquals(postResponse.userId, postExpected.userId);
+        Assert.assertEquals(postResponse.id, postExpected.id);
+        Assert.assertEquals(postResponse.title, postExpected.title);
+        Assert.assertEquals(postResponse.body, postExpected.body);
     }
 
     @Test(dataProvider = "resourceBySpecificID")
