@@ -32,7 +32,7 @@ public class MainTest extends ConfigurationTest{
     }
 
     @Test(dataProvider = "compareNodesByID")
-    public void get_20_50_100(int mID, String resource, int mUserID, String mTitle, String mBody){
+    public void get_20_50_100(Integer mID, String resource, Integer mUserID, String mTitle, String mBody){
         RestAssured.baseURI = "https://jsonplaceholder.typicode.com";
         Response response = RestAssured.given().pathParam("id", mID).expect().statusCode(200).when().get(resource);
 
